@@ -46,13 +46,13 @@ extern bool getFileSize(int fd, size_t &size);
 #    ifdef MMKV_ANDROID
 extern size_t ASharedMemory_getSize(int fd);
 #    else
-File::File(MMKVPath_t path, OpenFlag flag) : m_path(std::move(path)), m_fd(-1), m_flag(flag) {
+File::File(MMKVPath_t path, OpenFlag flag, FDFlag fdFlag) : m_path(std::move(path)), m_fd(-1), m_flag(flag), m_isMayflyFD(fdFlag) {
     open();
 }
 
-MemoryFile::MemoryFile(MMKVPath_t path, size_t expectedCapacity, bool readOnly)
-    : m_diskFile(std::move(path), readOnly ? OpenFlag::ReadOnly : (OpenFlag::ReadWrite | OpenFlag::Create))
-    , m_ptr(nullptr), m_size(0), m_readOnly(readOnly)
+MemoryFile::MemoryFile(MMKVPath_t path, size_t expectedCapacity, bool readOnly, bool mayflyFD)
+    : m_diskFile(std::move(path), readOnly ? OpenFlag::ReadOnly : (OpenFlag::ReadWrite | OpenFlag::Create), mayflyFD ? FDFlag::MayflyFD : FDFlag::LongLiveFD)
+    , m_ptr(nullptr), m_size(0), m_readOnly(readOnly), m_isMayflyFD(mayflyFD)
 {
     reloadFromFile(expectedCapacity);
 }

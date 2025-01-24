@@ -61,6 +61,8 @@ static inline OpenFlag operator & (OpenFlag left, uint32_t right) {
     return static_cast<OpenFlag>(static_cast<uint32_t>(left) & right);
 }
 
+enum class FDFlag : bool { MayflyFD = true, LongLiveFD = false };
+
 template <typename T>
 T roundUp(T numToRound, T multiple) {
     return ((numToRound + multiple - 1) / multiple) * multiple;
@@ -71,10 +73,11 @@ class File {
     MMKVFileHandle_t m_fd;
 public:
     const OpenFlag m_flag;
+    const FDFlag m_isMayflyFD;
 #ifndef MMKV_ANDROID
-    explicit File(MMKVPath_t path, OpenFlag flag);
+    explicit File(MMKVPath_t path, OpenFlag flag, FDFlag fdFlag = FDFlag::LongLiveFD);
 #else
-    File(MMKVPath_t path, OpenFlag flag, size_t size = 0, FileType fileType = MMFILE_TYPE_FILE);
+    File(MMKVPath_t path, OpenFlag flag, size_t size = 0, FileType fileType = MMFILE_TYPE_FILE, FDFlag fdFlag = FDFlag::LongLiveFD);
     explicit File(MMKVFileHandle_t ashmemFD);
 
     size_t m_size;
@@ -115,6 +118,7 @@ class MemoryFile {
     void *m_ptr;
     size_t m_size;
     const bool m_readOnly;
+    const bool m_isMayflyFD;
 
     bool mmap();
 
@@ -122,9 +126,9 @@ class MemoryFile {
 
 public:
 #ifndef MMKV_ANDROID
-    explicit MemoryFile(MMKVPath_t path, size_t expectedCapacity = 0, bool readOnly = false);
+    explicit MemoryFile(MMKVPath_t path, size_t expectedCapacity = 0, bool readOnly = false, bool mayflyFD = false);
 #else
-    MemoryFile(MMKVPath_t path, size_t size, FileType fileType, size_t expectedCapacity = 0, bool readOnly = false);
+    MemoryFile(MMKVPath_t path, size_t size, FileType fileType, size_t expectedCapacity = 0, bool readOnly = false, bool mayflyFD = false);
     explicit MemoryFile(MMKVFileHandle_t ashmemFD);
 
     const FileType m_fileType;
